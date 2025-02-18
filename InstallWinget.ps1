@@ -1,35 +1,35 @@
-# Устанавливаем ссылку на страницу релизов
+# Set the URL for the releases page
 $repoUrl = "https://api.github.com/repos/microsoft/winget-cli/releases/latest"
 
 try {
-    # Получаем информацию о последнем релизе
+    # Retrieve information about the latest release
     $release = Invoke-RestMethod -Uri $repoUrl
 } catch {
-    Write-Error "Не удалось получить информацию о последнем релизе. Проверьте подключение к интернету или URL."
+    Write-Error "Failed to fetch the latest release information. Check your internet connection or URL."
     exit 1
 }
 
-# Ищем ссылку на нужный файл msixbundle
+# Find the download link for the required msixbundle file
 $fileUrl = $release.assets | Where-Object { $_.browser_download_url -like "*.msixbundle" } | Select-Object -ExpandProperty browser_download_url
 
 if (-not $fileUrl) {
-    Write-Error "Не удалось найти файл msixbundle в последнем релизе."
+    Write-Error "Could not find an msixbundle file in the latest release."
     exit 1
 }
 
-# Скачиваем файл
+# Download the file
 try {
     Invoke-WebRequest -Uri $fileUrl -OutFile "Microsoft.DesktopAppInstaller.msixbundle"
 } catch {
-    Write-Error "Ошибка при скачивании файла msixbundle."
+    Write-Error "Error downloading the msixbundle file."
     exit 1
 }
 
-# Устанавливаем скачанный msixbundle
+# Install the downloaded msixbundle
 try {
     Add-AppxPackage -Path .\Microsoft.DesktopAppInstaller.msixbundle
-    Write-Output "Winget успешно установлен."
+    Write-Output "Winget has been successfully installed."
 } catch {
-    Write-Error "Ошибка при установке пакета msixbundle."
+    Write-Error "Error installing the msixbundle package."
     exit 1
 }
